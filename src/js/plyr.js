@@ -7,8 +7,8 @@
 
 import captions from './captions';
 import defaults from './config/defaults';
-import { pip } from './config/states';
-import { getProviderByUrl, providers, types } from './config/types';
+import {pip} from './config/states';
+import {getProviderByUrl, providers, types} from './config/types';
 import Console from './console';
 import controls from './controls';
 import Fullscreen from './fullscreen';
@@ -20,13 +20,13 @@ import source from './source';
 import Storage from './storage';
 import support from './support';
 import ui from './ui';
-import { closest } from './utils/arrays';
-import { createElement, hasClass, removeElement, replaceElement, toggleClass, wrap } from './utils/elements';
-import { off, on, once, triggerEvent, unbindListeners } from './utils/events';
+import {closest} from './utils/arrays';
+import {createElement, hasClass, removeElement, replaceElement, toggleClass, wrap} from './utils/elements';
+import {off, on, once, triggerEvent, unbindListeners} from './utils/events';
 import is from './utils/is';
 import loadSprite from './utils/loadSprite';
-import { cloneDeep, extend } from './utils/objects';
-import { parseUrl } from './utils/urls';
+import {cloneDeep, extend} from './utils/objects';
+import {parseUrl} from './utils/urls';
 
 // Private properties
 // TODO: Use a WeakMap for private globals
@@ -154,6 +154,12 @@ class Plyr {
         let iframe = null;
         let url = null;
 
+        let sonogramm = this.media.getAttribute('data-sonogramm');
+
+        if (sonogramm) {
+            this.debug.log('Found sonogramm: ', sonogramm);
+        }
+
         // Different setup based on type
         switch (type) {
             case 'div':
@@ -217,6 +223,22 @@ class Plyr {
                 this.type = type;
                 this.provider = providers.html5;
 
+                if (sonogramm) {
+                    this.debug.log('Found sonogramm: ', sonogramm);
+                    const id = this.media.id.toString() + '-sonogramm';
+                    const sonogrammImage = document.createElement('img');
+                    const sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media
+                    sonogrammImage.src = sonogramm;
+
+                    sonogrammWrapper.appendChild(sonogrammImage)
+                    console.log(this.media);
+
+                }
+
+                this.media.onloadedmetadata = () => {
+
+                };
+
                 // Get config from attributes
                 if (this.media.hasAttribute('crossorigin')) {
                     this.config.crossorigin = true;
@@ -263,7 +285,7 @@ class Plyr {
 
         // Wrap media
         if (!is.element(this.elements.container)) {
-            this.elements.container = createElement('div', { tabindex: 0 });
+            this.elements.container = createElement('div', {tabindex: 0});
             wrap(this.media, this.elements.container);
         }
 
@@ -345,6 +367,7 @@ class Plyr {
         return Boolean(this.type === types.audio);
     }
 
+
     /**
      * Play the media, or play the advertisement (if they are not blocked)
      */
@@ -372,6 +395,7 @@ class Plyr {
 
         this.media.pause();
     }
+
 
     /**
      * Get playing state
@@ -482,7 +506,7 @@ class Plyr {
      * Get buffered
      */
     get buffered() {
-        const { buffered } = this.media;
+        const {buffered} = this.media;
 
         // YouTube / Vimeo return a float between 0-1
         if (is.number(buffered)) {
@@ -541,7 +565,7 @@ class Plyr {
 
         // Use config if all else fails
         if (!is.number(volume)) {
-            ({ volume } = this.config);
+            ({volume} = this.config);
         }
 
         // Maximum is volumeMax
@@ -726,7 +750,7 @@ class Plyr {
 
         // Save to storage
         if (updateStorage) {
-            this.storage.set({ quality });
+            this.storage.set({quality});
         }
     }
 
@@ -736,6 +760,8 @@ class Plyr {
     get quality() {
         return this.media.quality;
     }
+
+
 
     /**
      * Toggle loop
@@ -817,7 +843,7 @@ class Plyr {
      * Get a download URL (either source or custom)
      */
     get download() {
-        const { download } = this.config.urls;
+        const {download} = this.config.urls;
 
         return is.url(download) ? download : this.source;
     }
@@ -832,7 +858,8 @@ class Plyr {
             return;
         }
 
-        ui.setPoster.call(this, input, false).catch(() => {});
+        ui.setPoster.call(this, input, false).catch(() => {
+        });
     }
 
     /**
@@ -882,7 +909,7 @@ class Plyr {
      * Get the current caption track index (-1 if disabled)
      */
     get currentTrack() {
-        const { toggled, currentTrack } = this.captions;
+        const {toggled, currentTrack} = this.captions;
         return toggled ? currentTrack : -1;
     }
 
@@ -1027,6 +1054,7 @@ class Plyr {
      * @param {function} callback - Callback for when destroy is complete
      * @param {boolean} soft - Whether it's a soft destroy (for source changes etc)
      */
+
     destroy(callback, soft = false) {
         if (!this.ready) {
             return;
@@ -1121,6 +1149,7 @@ class Plyr {
             setTimeout(done, 200);
         }
     }
+
 
     /**
      * Check for support for a mime type (HTML5 only)

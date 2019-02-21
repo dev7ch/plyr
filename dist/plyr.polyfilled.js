@@ -10931,7 +10931,13 @@ typeof navigator === "object" && (function (global, factory) {
       var type = this.media.tagName.toLowerCase(); // Embed properties
 
       var iframe = null;
-      var url = null; // Different setup based on type
+      var url = null;
+      var sonogramm = this.media.getAttribute('data-sonogramm');
+
+      if (sonogramm) {
+        this.debug.log('Found sonogramm: ', sonogramm);
+      } // Different setup based on type
+
 
       switch (type) {
         case 'div':
@@ -10988,7 +10994,20 @@ typeof navigator === "object" && (function (global, factory) {
         case 'video':
         case 'audio':
           this.type = type;
-          this.provider = providers.html5; // Get config from attributes
+          this.provider = providers.html5;
+
+          if (sonogramm) {
+            this.debug.log('Found sonogramm: ', sonogramm);
+            var id = this.media.id.toString() + '-sonogramm';
+            var sonogrammImage = document.createElement('img');
+            var sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media;
+            sonogrammImage.src = sonogramm;
+            sonogrammWrapper.appendChild(sonogrammImage);
+            console.log(this.media);
+          }
+
+          this.media.onloadedmetadata = function () {}; // Get config from attributes
+
 
           if (this.media.hasAttribute('crossorigin')) {
             this.config.crossorigin = true;

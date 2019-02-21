@@ -10991,16 +10991,29 @@ function () {
         this.provider = providers.html5;
 
         if (sonogramm) {
-          this.debug.log('Found sonogramm: ', sonogramm);
-          var id = this.media.id.toString() + '-sonogramm';
-          var sonogrammImage = document.createElement('img');
+          var id = this.media.id + '-sonogramm';
+          var sonogrammImage = new Image();
+          var sonogrammControl = document.createElement('div');
+          var sonogrammProgress = document.createElement('div');
           var sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media;
+          sonogrammControl.id = id;
+          sonogrammControl.style.position = 'relative';
+          sonogrammControl.classList.add('sonogramm-control');
+          sonogrammImage.id = "".concat(id, "-image");
           sonogrammImage.src = sonogramm;
-          sonogrammWrapper.appendChild(sonogrammImage);
-          console.log(this.media);
-        }
-
-        this.media.onloadedmetadata = function () {}; // Get config from attributes
+          sonogrammImage.classList.add('sonogramm-image');
+          "Seeking to ".concat(this.currentTime, " seconds");
+          sonogrammProgress.id = "".concat(id, "-progress");
+          sonogrammProgress.style.position = 'absolute';
+          sonogrammProgress.style.top = '0';
+          sonogrammProgress.style.height = '100%';
+          sonogrammProgress.style.width = '0';
+          sonogrammProgress.style.backgroundColor = 'red';
+          sonogrammProgress.classList.add('sonogramm-progress');
+          sonogrammWrapper.appendChild(sonogrammControl);
+          sonogrammControl.appendChild(sonogrammImage);
+          sonogrammControl.appendChild(sonogrammProgress);
+        } // Get config from attributes
 
 
         if (this.media.hasAttribute('crossorigin')) {
@@ -11028,6 +11041,22 @@ function () {
       default:
         this.debug.error('Setup failed: unsupported type');
         return;
+    }
+
+    if (sonogramm && this.media) {
+      this.media.ontimeupdate = function () {
+        var seeker = document.getElementById(_this.elements.inputs.seek.id);
+        var progress = document.getElementById('player-sonogramm-progress');
+
+        if (seeker && progress) {
+          var state = seeker.getAttribute('aria-valuenow');
+          var max = seeker.getAttribute('aria-valuemax');
+          var current = state / max * 100;
+          progress.style.width = "".concat(current, "%");
+          console.log(progress);
+          console.log(current);
+        }
+      };
     } // Check for support again but with type
 
 

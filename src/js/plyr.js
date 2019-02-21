@@ -154,7 +154,7 @@ class Plyr {
         let iframe = null;
         let url = null;
 
-        let sonogramm = this.media.getAttribute('data-sonogramm');
+        const sonogramm = this.media.getAttribute('data-sonogramm');
 
         if (sonogramm) {
             this.debug.log('Found sonogramm: ', sonogramm);
@@ -224,20 +224,36 @@ class Plyr {
                 this.provider = providers.html5;
 
                 if (sonogramm) {
-                    this.debug.log('Found sonogramm: ', sonogramm);
-                    const id = this.media.id.toString() + '-sonogramm';
-                    const sonogrammImage = document.createElement('img');
-                    const sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media
-                    sonogrammImage.src = sonogramm;
+                    const id = this.media.id + '-sonogramm';
+                    const sonogrammImage = new Image();
+                    const sonogrammControl = document.createElement('div');
+                    const sonogrammProgress = document.createElement('div');
+                    const sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media;
 
-                    sonogrammWrapper.appendChild(sonogrammImage)
-                    console.log(this.media);
+
+                    sonogrammControl.id = id;
+                    sonogrammControl.style.position = 'relative'
+                    sonogrammControl.classList.add('sonogramm-control');
+
+                    sonogrammImage.id = `${id}-image`;
+                    sonogrammImage.src = sonogramm;
+                    sonogrammImage.classList.add('sonogramm-image');
+
+                    `Seeking to ${this.currentTime} seconds`
+                    sonogrammProgress.id = `${id}-progress`;
+                    sonogrammProgress.style.position = 'absolute';
+                    sonogrammProgress.style.top = '0';
+                    sonogrammProgress.style.height = '100%';
+                    sonogrammProgress.style.width = '0';
+                    sonogrammProgress.style.backgroundColor = 'red';
+                    sonogrammProgress.classList.add('sonogramm-progress');
+
+
+                    sonogrammWrapper.appendChild(sonogrammControl);
+                    sonogrammControl.appendChild(sonogrammImage);
+                    sonogrammControl.appendChild(sonogrammProgress);
 
                 }
-
-                this.media.onloadedmetadata = () => {
-
-                };
 
                 // Get config from attributes
                 if (this.media.hasAttribute('crossorigin')) {
@@ -261,6 +277,22 @@ class Plyr {
             default:
                 this.debug.error('Setup failed: unsupported type');
                 return;
+        }
+
+        if (sonogramm && this.media) {
+            this.media.ontimeupdate  = () => {
+                const seeker = document.getElementById(this.elements.inputs.seek.id);
+                const progress = document.getElementById('player-sonogramm-progress');
+                if (seeker && progress ) {
+                    const state = seeker.getAttribute('aria-valuenow');
+                    const max = seeker.getAttribute('aria-valuemax');
+                    const current  = state / max * 100;
+
+                    progress.style.width = `${current}%`;
+                    console.log(progress);
+                    console.log(current);
+                }
+            };
         }
 
         // Check for support again but with type

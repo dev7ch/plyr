@@ -154,7 +154,7 @@ class Plyr {
         let iframe = null;
         let url = null;
 
-        const sonogramm = this.media.getAttribute('data-sonogramm');
+        const sonogramm = this.media.hasAttribute('data-sonogramm') ?  this.media.getAttribute('data-sonogramm') : null;
 
         if (sonogramm) {
             this.debug.log('Found sonogramm: ', sonogramm);
@@ -224,7 +224,8 @@ class Plyr {
                 this.provider = providers.html5;
 
                 if (sonogramm) {
-                    const id = this.media.id + '-sonogramm';
+
+                    const id = `${this.media.id  }-sonogramm`;
                     const sonogrammImage = new Image();
                     const sonogrammControl = document.createElement('div');
                     const sonogrammProgress = document.createElement('div');
@@ -232,20 +233,21 @@ class Plyr {
 
 
                     sonogrammControl.id = id;
-                    sonogrammControl.style.position = 'relative'
+                    sonogrammControl.style.position = 'relative';
                     sonogrammControl.classList.add('sonogramm-control');
 
                     sonogrammImage.id = `${id}-image`;
                     sonogrammImage.src = sonogramm;
+                    sonogrammImage.maxWidth = '100%';
                     sonogrammImage.classList.add('sonogramm-image');
 
-                    `Seeking to ${this.currentTime} seconds`
                     sonogrammProgress.id = `${id}-progress`;
                     sonogrammProgress.style.position = 'absolute';
                     sonogrammProgress.style.top = '0';
                     sonogrammProgress.style.height = '100%';
                     sonogrammProgress.style.width = '0';
-                    sonogrammProgress.style.backgroundColor = 'red';
+                    sonogrammProgress.style.opacity = '.4';
+                    sonogrammProgress.style.backgroundColor = 'green';
                     sonogrammProgress.classList.add('sonogramm-progress');
 
 
@@ -279,20 +281,57 @@ class Plyr {
                 return;
         }
 
-        if (sonogramm && this.media) {
-            this.media.ontimeupdate  = () => {
-                const seeker = document.getElementById(this.elements.inputs.seek.id);
-                const progress = document.getElementById('player-sonogramm-progress');
-                if (seeker && progress ) {
-                    const state = seeker.getAttribute('aria-valuenow');
-                    const max = seeker.getAttribute('aria-valuemax');
-                    const current  = state / max * 100;
+        // Audio sonogramm
 
+        if (sonogramm && this.media && this.elements.inputs) {
+
+            const progress = document.getElementById(`${this.media.id}-sonogramm-progress`);
+            const seeker = this.elements.inputs;
+            const wrapper = document.getElementById(`${this.media.id}-sonogramm`);
+            const interaction = document.createElement('div');
+
+            if (progress && seeker && wrapper) {
+
+                wrapper.maxWidth = '100%';
+
+                interaction.style.backgroundColor = 'transparent';
+                interaction.style.height = '100%';
+                interaction.id = `${this.media.id}-progress`;
+                interaction.style.position = 'absolute';
+                interaction.style.top = '0';
+                interaction.style.height = '100%';
+                interaction.style.width = '5px';
+                interaction.style.opcacity = '1';
+                interaction.style.transition = 'left .2s ease-in, opacity .15s ease-in-out, background-color .2s ease-in';
+
+                wrapper.appendChild(interaction);
+
+                let rect = wrapper.getBoundingClientRect();
+
+                this.media.ontimeupdate = () => {
+                    const state = this.media.currentTime;
+                    const max = this.media.duration
+                    const current = state / max * 100;
                     progress.style.width = `${current}%`;
-                    console.log(progress);
-                    console.log(current);
-                }
-            };
+                };
+
+                wrapper.addEventListener('mousemove', (event) => {
+                    interaction.style.backgroundColor = 'red';
+                    setTimeout(() => {
+                        const percent = (100 / rect.width) * (event.pageX - rect.left);
+                        interaction.style.left = `${percent}%`;
+                    }, 250);
+                });
+
+                wrapper.addEventListener('click', (event) => {
+                    event.preventDefault();
+                    rect = wrapper.getBoundingClientRect();
+                    const max =  this.media.duration;
+                    const percent = (100 / rect.width) * (event.pageX - rect.left);
+                    progress.style.width = `${percent}%`;
+                    this.media.currentTime = max / 100 * percent;
+                });
+            }
         }
 
         // Check for support again but with type

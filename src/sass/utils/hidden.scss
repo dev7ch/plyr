@@ -26,3 +26,36 @@
 .plyr [hidden] {
     display: none !important;
 }
+
+.sonogramm-control {
+    border-radius: 4px;
+}
+.sonogramm-control + .plyr {
+    max-width: 640px;
+}
+
+.sonogramm-control.compact + .plyr, .sonogramm-control.compact {
+    margin: 0 auto;
+    max-width: 480px;
+}
+
+
+.sonogramm-control.compact > img {
+    padding-bottom: 52px;
+}
+
+.sonogramm-control.compact {
+    border-bottom-left-radius: 0;
+    border-bottom-right-radius: 0;
+
+    + .plyr {
+        margin-top: -52px;
+
+        .plyr__controls {
+            border-top-left-radius: 0;
+            border-top-right-radius: 0;
+        }
+    }
+}
+
+

@@ -7803,6 +7803,7 @@ typeof navigator === "object" && (function (global, factory) {
       var url = null;
       var sonogramm = this.media.getAttribute('sonogramm') ? this.media.getAttribute('sonogramm-preload') || this.media.getAttribute('sonogramm-image') : null;
       var sonogrammParams = this.media.hasAttribute('sonogramm-params') || this.media.hasAttribute('sonogramm-preload-params') ? this.media.getAttribute('sonogramm-params') || this.media.getAttribute('sonogramm-preload-params') : null;
+      var sonogrammHeight = this.media.hasAttribute('sonogramm-height') ? this.media.getAttribute('sonogramm-height') : null;
 
       if (!sonogrammParams) {
         sonogrammParams = !this.media.hasAttribute('sonogramm-image') ? '$$poster/resize/formatJPG/size800x100/stretch' : '';
@@ -7908,11 +7909,17 @@ typeof navigator === "object" && (function (global, factory) {
 
             sonogrammControl.id = "".concat(id, "-control");
             sonogrammControl.style.position = 'relative';
-            sonogrammControl.classList.add('sonogramm-control');
+
+            if (this.media.hasAttribute('sonogramm-compact')) {
+              sonogrammControl.classList.add('compact', 'sonogramm-control');
+            } else {
+              sonogrammControl.classList.add('sonogramm-control');
+            }
+
             sonogrammImage.id = "".concat(id, "-image");
             sonogrammImage.src = sonogrammFiletype ? "".concat(sonogramm.split(sonogrammFiletype)[0] + sonogrammFiletype + sonogrammParams) : sonogramm + sonogrammParams;
             sonogrammImage.style.objectFit = 'contain';
-            sonogrammImage.style.height = 'auto';
+            sonogrammImage.style.height = sonogrammHeight && !this.media.hasAttribute('sonogramm-compact') ? sonogrammHeight : 'auto';
             sonogrammImage.style.maxWidth = '100%';
             sonogrammImage.classList.add('sonogramm-image');
             sonogrammProgress.id = "".concat(id, "-progress");

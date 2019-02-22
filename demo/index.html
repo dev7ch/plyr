@@ -54,7 +54,10 @@
 
     <body>
 
-        <div class="grid" style="flex-flow: row wrap">
+    <section class="container" style="flex:none; margin-bottom: 60px">
+        <div class="sonogram" id="player-audio-sonogramm" style="position: relative;"></div>
+    </section>
+        <div class="grid" style="flex-flow: row wrap; min-height: 100vh; height: 100%">
             <header>
                 <h1>Plyr Audio</h1>
                 <p>
@@ -63,48 +66,23 @@
                 <a href="https://github.com/dev7ch/plyr/tree/hgk-dima" target="_blank">Git Repo</a>
             </header>
 
-
             <main>
-                <div class="container" style="flex: 1 0 100%; margin-bottom: 60px">
-                    <div class="sonogram" id="player-audio-sonogramm" style="position: relative;"></div>
-                </div>
-                <div id="container">
+                <div class="container">
                     <audio id="player-audio" crossorigin
                            class="hgk-dima-player"
                            playsinline controls
                            sonogramm
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph
+                           sonogramm-mixblend-progress
                            sonogramm-image="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$poster/master">
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
                     </audio>
                     <br/>
-
-
-
-                    <!--<pre style="text-align: left; width: 100%">-->
-                    <!--<xmp style="max-width: 100%">-->
-                        <!--<audio id="player-audio-example" crossorigin-->
-                               <!--class="hgk-dima-player"-->
-                               <!--playsinline controls-->
-                               <!--sonogramm-->
-                               <!--sonogramm-image="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$poster/master">-->
-                            <!--<source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />-->
-                            <!--<source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />-->
-                        <!--</audio>-->
-
-                       <!--&lt;!&ndash;- anywhere in the document &ndash;&gt;-->
-
-                        <!--<div class="sonogram" id="player-audio-example-sonogramm" style="position: relative;"></div>-->
-
-                        <!--</xmp>-->
-                    <!--</pre>-->
-
-                    <br/>
-                    <h2>Automatically appended to audio player"</h2>
                     <br/>
                     <br/>
-                    </div>
-                <div class="container">
+                    <br/>
                     <audio id="player-2" crossorigin
                            class="hgk-dima-player"
                            playsinline controls
@@ -117,19 +95,30 @@
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav$$web$$1/master" type="audio/mp4" />
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav$$web$$1/master" type="audio/wav" />
                     </audio>
-
                     <br/>
                     <br/>
-                    <h2>Automatically appended to audio player"</h2>
                     <br/>
                     <br/>
                     <audio id="player-audio-3" crossorigin
                            class="hgk-dima-player"
                            playsinline controls
                            sonogramm
+                           sonogramm-height="120px"
                            sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
                            sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
                            sonogramm-params="$$poster/resize/formatJPG/size800x100/stretch"
+                    >
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+                    </audio>
+                    <audio id="player-audio-4" crossorigin
+                           class="hgk-dima-player"
+                           playsinline controls
+                           sonogramm
+                           sonogramm-compact
+                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
+                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                           sonogramm-params="$$poster/resize/formatPNG/size480x200/stretch"
                     >
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
@@ -140,8 +129,9 @@
 
         <div>
             <main>
-
-
+                <section class="container" style="flex:none; margin-bottom: 60px">
+                    <div class="sonogram" id="player-audio-3-sonogramm" style="position: relative;"></div>
+                </section>
             </main>
         </div>
 

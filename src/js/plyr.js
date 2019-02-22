@@ -161,6 +161,10 @@ class Plyr {
             ? this.media.getAttribute('sonogramm-params') || this.media.getAttribute('sonogramm-preload-params')
             : null;
 
+        const sonogrammHeight = this.media.hasAttribute('sonogramm-height')
+            ? this.media.getAttribute('sonogramm-height')
+            : null;
+
         if (!sonogrammParams) {
             sonogrammParams = !this.media.hasAttribute('sonogramm-image') ? '$$poster/resize/formatJPG/size800x100/stretch' : '';
         }
@@ -246,7 +250,7 @@ class Plyr {
                 this.config.settings = [];
 
                 if (sonogramm) {
-                    const id = `${this.media.id  }-sonogramm`;
+                    const id = `${this.media.id}-sonogramm`;
                     const sonogrammImage = new Image();
                     const sonogrammControl = document.createElement('div');
                     const sonogrammProgress = document.createElement('div');
@@ -270,17 +274,21 @@ class Plyr {
                             return `rgba(${  r  }, ${  g  }, ${  b  }, ${  alpha  })`;
                         }
                         return `rgb(${  r  }, ${  g  }, ${  b  })`;
-
                     };
 
                     sonogrammControl.id = `${id}-control`;
                     sonogrammControl.style.position = 'relative';
-                    sonogrammControl.classList.add('sonogramm-control');
+
+                    if (this.media.hasAttribute('sonogramm-compact')) {
+                        sonogrammControl.classList.add('compact', 'sonogramm-control');
+                    } else {
+                        sonogrammControl.classList.add('sonogramm-control');
+                    }
 
                     sonogrammImage.id = `${id}-image`;
                     sonogrammImage.src = sonogrammFiletype ? `${sonogramm.split(sonogrammFiletype)[0] + sonogrammFiletype + sonogrammParams}` : sonogramm + sonogrammParams;
                     sonogrammImage.style.objectFit = 'contain';
-                    sonogrammImage.style.height = 'auto';
+                    sonogrammImage.style.height = sonogrammHeight && !this.media.hasAttribute('sonogramm-compact') ? sonogrammHeight : 'auto';
                     sonogrammImage.style.maxWidth = '100%';
                     sonogrammImage.classList.add('sonogramm-image');
 
@@ -304,7 +312,6 @@ class Plyr {
                         sonogrammControl.appendChild(sonogrammImage);
                         sonogrammControl.appendChild(sonogrammProgress);
                     }
-
 
                 }
 

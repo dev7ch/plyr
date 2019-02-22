@@ -303,7 +303,7 @@ class Plyr {
                     sonogrammProgress.classList.add('sonogramm-progress');
 
                     let mixModeGraph = null;
-                    let mixColorGraph = null;
+                    let mixColorGraph = 'transparent';
                     let mixModeProgress = null;
                     let mixColorProgress = null;
                     if (this.media.hasAttribute('sonogramm-mixblend-mode')) {
@@ -314,13 +314,14 @@ class Plyr {
                         if (this.media.hasAttribute('sonogramm-mixblend-graph-color')) {
                             mixColorGraph = this.media.getAttribute('sonogramm-mixblend-graph-color');
                             sonogrammImage.style.backgroundColor = mixColorGraph;
+                            sonogrammControl.style.backgroundColor = mixColorGraph;
                         }
                         if (this.media.hasAttribute('sonogramm-mixblend-progress')) {
-                            mixModeProgress = this.media.getAttribute('sonogramm-mixblend-graph');
+                            mixModeProgress = this.media.getAttribute('sonogramm-mixblend-progress');
                             sonogrammProgress.style.mixBlendMode = mixModeProgress;
                         }
                         if (this.media.hasAttribute('sonogramm-mixblend-progress-color')) {
-                            mixColorProgress = this.media.getAttribute('sonogramm-mixblend-graph-color');
+                            mixColorProgress = this.media.getAttribute('sonogramm-mixblend-progress-color');
                             sonogrammProgress.style.backgroundColor = mixColorProgress;
                         }
                     }

@@ -63,80 +63,177 @@
                 <p>
                     Customized to support a sonogramm for audio files.
                 </p>
+                <br/>
                 <a href="https://github.com/dev7ch/plyr/tree/hgk-dima" target="_blank">Git Repo</a>
+                <br/>
+                <br/>
+                <audio id="player-audio" crossorigin
+                       class="hgk-dima-player"
+                       playsinline controls
+                       sonogramm
+                       sonogramm-mixblend-mode
+                       sonogramm-mixblend-graph="screen"
+                       sonogramm-mixblend-progress="screen"
+                       sonogramm-mixblend-graph-color="#1aafff"
+                       sonogramm-mixblend-progress-color="#1aafff"
+                       sonogramm-params="$$poster/resize/formatPNG/size1800x600/stretch"
+                       sonogramm-image="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master">
+                    <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                    <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+                </audio>
             </header>
 
             <main>
                 <div class="container">
-                    <audio id="player-audio" crossorigin
-                           class="hgk-dima-player"
-                           playsinline controls
-                           sonogramm
-                           sonogramm-mixblend-mode
-                           sonogramm-mixblend-graph="difference"
-                           sonogramm-mixblend-progress="normal"
-                           sonogramm-mixblend-graph-color="#1aafff"
-                           sonogramm-mixblend-progress-color="red"
-                           sonogramm-image="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$poster/master">
-                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
-                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
-                    </audio>
-                    <br/>
-                    <br/>
-                    <br/>
-                    <br/>
-                    <audio id="player-2" crossorigin
-                           class="hgk-dima-player"
-                           playsinline controls
-                           sonogramm
-                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav/master"
-                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
-                           sonogramm-image="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav/master"
-                           sonogramm-params="$$poster/resize/formatPNG/size800x200/stretch"
-                    >
-                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav$$web$$1/master" type="audio/mp4" />
-                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav$$web$$1/master" type="audio/wav" />
-                    </audio>
-                    <br/>
-                    <br/>
-                    <br/>
-                    <br/>
-                    <audio id="player-audio-3" crossorigin
-                           class="hgk-dima-player"
-                           playsinline controls
-                           sonogramm
-                           sonogramm-height="120px"
-                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
-                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
-                           sonogramm-params="$$poster/resize/formatJPG/size800x100/stretch"
-                    >
-                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
-                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
-                    </audio>
                     <audio id="player-audio-4" crossorigin
                            class="hgk-dima-player"
                            playsinline controls
                            sonogramm
                            sonogramm-compact
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph="screen"
+                           sonogramm-mixblend-progress="screen"
+                           sonogramm-mixblend-graph-color="black"
+                           sonogramm-mixblend-progress-color="#1aafff"
                            sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
                            sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
-                           sonogramm-params="$$poster/resize/formatPNG/size480x200/stretch"
+                           sonogramm-params="$$poster/resize/formatPNG/size480x260/stretch"
                     >
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
                         <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
                     </audio>
+                    <br/>
+                    <br/>
                 </div>
             </main>
-        </div>
-
-        <div>
-            <main>
-                <section class="container" style="flex:none; margin-bottom: 60px">
-                    <div class="sonogram" id="player-audio-3-sonogramm" style="position: relative;"></div>
-                </section>
+            <main style="flex: 1 0 100%">
+                <div class="container">
+                    <audio id="player-audio-7" crossorigin
+                           class="hgk-dima-player"
+                           playsinline controls
+                           sonogramm
+                           sonogramm-compact
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph="screen"
+                           sonogramm-mixblend-progress="screen"
+                           sonogramm-mixblend-graph-color="black"
+                           sonogramm-mixblend-progress-color="#1aafff"
+                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
+                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                           sonogramm-params="$$poster/resize/formatPNG/size480x260/stretch"
+                    >
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+                    </audio>
+                    <br/>
+                    <br/>
+                </div>
+                <div class="container">
+                    <audio id="player-audio-8" crossorigin
+                           class="hgk-dima-player"
+                           playsinline controls
+                           sonogramm
+                           sonogramm-compact
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph="screen"
+                           sonogramm-mixblend-progress="screen"
+                           sonogramm-mixblend-graph-color="black"
+                           sonogramm-mixblend-progress-color="red"
+                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
+                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                           sonogramm-params="$$poster/resize/formatPNG/size670x120/stretch"
+                    >
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+                    </audio>
+                    <br/>
+                    <br/>
+                </div>
             </main>
+            <main style="flex: 1 0 40%">
+                <div class="container">
+                    <audio id="player-audio-5" crossorigin
+                           class="hgk-dima-player"
+                           playsinline controls
+                           sonogramm
+                           sonogramm-compact
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph="hard-light"
+                           sonogramm-mixblend-progress="difference"
+                           sonogramm-mixblend-graph-color="#1aafff"
+                           sonogramm-mixblend-progress-color="#1aafff"
+                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
+                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                           sonogramm-params="$$poster/resize/formatPNG/size480x120/stretch"
+                    >
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+                    </audio>
+                    <br/>
+                    <br/>
+                </div>
+            </main>
+            <main style="flex: 1 0 40%">
+                <div class="container">
+                    <audio id="player-audio-6" crossorigin
+                           class="hgk-dima-player"
+                           playsinline controls
+                           sonogramm
+                           sonogramm-compact
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph="screen"
+                           sonogramm-mixblend-progress="hard-light"
+                           sonogramm-mixblend-graph-color="#4dc1f"
+                           sonogramm-mixblend-progress-color="#1aafff"
+                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
+                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                           sonogramm-params="$$poster/resize/formatPNG/size480x120/stretch"
+                    >
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+                    </audio>
+                    <br/>
+                    <br/>
+                </div>
+            </main>
+            <main style="flex: 1 0 100%;">
+                <div class="container" style="max-width: 800px; width: auto; margin: 0 auto">
+                    <audio id="player-2" crossorigin
+                           class="hgk-dima-player"
+                           playsinline controls
+                           sonogramm
+                           sonogramm-mixblend-mode
+                           sonogramm-mixblend-graph="screen"
+                           sonogramm-mixblend-progress="screen"
+                           sonogramm-mixblend-graph-color="black"
+                           sonogramm-mixblend-progress-color="#1aafff"
+                           sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav/master"
+                           sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                           sonogramm-image="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav/master"
+                           sonogramm-params="$$poster/resize/size800x200/stretch"
+                    >
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav$$web$$1/master" type="audio/mp4" />
+                        <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Ariane_Koch_liest_VenusElectraRyter__Texte_im_Dunstkreis_1-04.wav$$web$$1/master" type="audio/wav" />
+                    </audio>
+                </div>
+            </main>
+            <audio id="player-audio-3" crossorigin
+                   class="hgk-dima-player"
+                   playsinline controls
+                   sonogramm
+                   sonogramm-preload="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master"
+                   sonogramm-preload-params="$$poster/resize/formatJPG/size2x6/stretch"
+                   sonogramm-params="$$poster/resize/formatJPG/size1200x100/stretch"
+            >
+                <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master" type="audio/wav" />
+                <source src="https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master" type="audio/mp4" />
+            </audio>
         </div>
-
+    <footer class="grid" style="max-width: 100%; min-height: 200px; text-align: center; position: relative">
+        <div class="container" style="max-width: 1200px; width: auto; margin: 0 auto">
+            <div class="sonogram" id="player-audio-3-sonogramm"></div>
+        </div>
+    </footer>
         <!-- Polyfills -->
         <script
             src="https://cdn.polyfill.io/v2/polyfill.min.js?features=es6,Array.prototype.includes,CustomEvent,Object.entries,Object.values,URL,Math.trunc"

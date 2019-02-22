@@ -11108,25 +11108,34 @@ typeof navigator === "object" && (function (global, factory) {
           interaction.id = "".concat(this.media.id, "-progress");
           interaction.style.position = 'absolute';
           interaction.style.top = '0';
+          interaction.style.zIndex = '0';
           interaction.style.height = '100%';
-          interaction.style.width = '5px';
+          interaction.style.width = '2px';
           interaction.style.backgroundColor = 'transparent';
           interaction.style.opcacity = '1';
           interaction.style.visibility = 'visible';
           wrapper.appendChild(interaction);
           var rect = wrapper.getBoundingClientRect();
-          interaction.style.backgroundColor = 'red';
+          interaction.style.backgroundColor = 'transparent';
+          wrapper.addEventListener('mouseenter', function (event) {
+            event.preventDefault();
+            interaction.style.opacity = '1';
+            interaction.style.backgroundColor = '#1aafff';
+          });
+          wrapper.addEventListener('mouseout', function (event) {
+            event.preventDefault();
+            interaction.style.backgroundColor = 'transparent';
+          });
+          wrapper.addEventListener('mousemove', function (event) {
+            var rect = wrapper.getBoundingClientRect();
+            var percent = 100 / rect.width * (event.pageX - rect.left);
 
-          if (!this.media.playing && !this.media.ontimeupdate) {
-            wrapper.addEventListener('mousemove', function (event) {
-              var rect = wrapper.getBoundingClientRect();
-              var percent = 100 / rect.width * (event.pageX - rect.left);
+            if (event.clientX - 20 > rect.x || event.clientX - 20 > rect.x) {
               interaction.style.left = "".concat(percent, "%");
-              interaction.style.backgroundColor = 'blue';
-              setTimeout(function () {}, 250);
-            }, false);
-          }
-
+              interaction.style.backgroundColor = 'transparent';
+              interaction.style.backgroundColor = '#1aafff';
+            }
+          }, false);
           wrapper.addEventListener('click', function (event) {
             event.preventDefault();
             rect = wrapper.getBoundingClientRect();
@@ -11141,6 +11150,8 @@ typeof navigator === "object" && (function (global, factory) {
             var max = _this.media.duration;
             var current = state / max * 100;
             progress.style.width = "".concat(current, "%");
+            interaction.style.opacity = '1';
+            interaction.style.backgroundColor = '#1aafff';
             interaction.style.left = "".concat(current, "%");
           };
         }

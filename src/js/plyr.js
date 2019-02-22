@@ -348,6 +348,7 @@ class Plyr {
                 interaction.id = `${this.media.id}-progress`;
                 interaction.style.position = 'absolute';
                 interaction.style.top = '0';
+                interaction.style.zIndex = '0';
                 interaction.style.height = '100%';
                 interaction.style.width = '2px';
                 interaction.style.backgroundColor = 'transparent';
@@ -359,19 +360,29 @@ class Plyr {
                 let rect = wrapper.getBoundingClientRect();
 
 
-                interaction.style.backgroundColor = 'red';
+                interaction.style.backgroundColor = 'transparent';
 
-                if (!this.media.playing && !this.media.ontimeupdate) {
-                    wrapper.addEventListener('mousemove', (event) => {
-                        const rect = wrapper.getBoundingClientRect();
-                        const percent = (100 / rect.width) * (event.pageX - rect.left);
+                wrapper.addEventListener('mouseenter', (event) => {
+                    event.preventDefault();
+                    interaction.style.opacity = '1';
+                    interaction.style.backgroundColor = '#1aafff';
+                });
+
+                wrapper.addEventListener('mouseout', (event) => {
+                    event.preventDefault();
+                    interaction.style.backgroundColor = 'transparent';
+                });
+
+                wrapper.addEventListener('mousemove', (event) => {
+                    const rect = wrapper.getBoundingClientRect();
+                    const percent = (100 / rect.width) * (event.pageX - rect.left);
+                    if (event.clientX - 20 > rect.x || event.clientX - 20 > rect.x ) {
                         interaction.style.left = `${percent}%`;
-                        interaction.style.backgroundColor = 'blue';
-                        setTimeout(() => {
-                        }, 250);
-                    }, false);
-                }
+                        interaction.style.backgroundColor = 'transparent';
+                        interaction.style.backgroundColor = '#1aafff';
+                    }
 
+                }, false);
 
                 wrapper.addEventListener('click', (event) => {
                     event.preventDefault();
@@ -388,6 +399,8 @@ class Plyr {
                     const max = this.media.duration;
                     const current = state / max * 100;
                     progress.style.width = `${current}%`;
+                    interaction.style.opacity = '1';
+                    interaction.style.backgroundColor = '#1aafff';
                     interaction.style.left = `${current}%`;
                 };
 

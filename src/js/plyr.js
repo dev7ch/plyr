@@ -285,6 +285,8 @@ class Plyr {
                         sonogrammControl.classList.add('sonogramm-control');
                     }
 
+
+
                     sonogrammImage.id = `${id}-image`;
                     sonogrammImage.src = sonogrammFiletype ? `${sonogramm.split(sonogrammFiletype)[0] + sonogrammFiletype + sonogrammParams}` : sonogramm + sonogrammParams;
                     sonogrammImage.style.objectFit = 'contain';
@@ -300,6 +302,28 @@ class Plyr {
                     sonogrammProgress.style.backgroundColor = this.media.hasAttribute('data-progress-color') ? this.media.getAttribute('data-progress-color') : hexToRGB('#1aafff', .5);
                     sonogrammProgress.classList.add('sonogramm-progress');
 
+                    let mixModeGraph = null;
+                    let mixColorGraph = null;
+                    let mixModeProgress = null;
+                    let mixColorProgress = null;
+                    if (this.media.hasAttribute('sonogramm-mixblend-mode')) {
+                        if (this.media.hasAttribute('sonogramm-mixblend-graph')) {
+                            mixModeGraph = this.media.getAttribute('sonogramm-mixblend-graph');
+                            sonogrammImage.style.mixBlendMode = mixModeGraph;
+                        }
+                        if (this.media.hasAttribute('sonogramm-mixblend-graph-color')) {
+                            mixColorGraph = this.media.getAttribute('sonogramm-mixblend-graph-color');
+                            sonogrammImage.style.backgroundColor = mixColorGraph;
+                        }
+                        if (this.media.hasAttribute('sonogramm-mixblend-progress')) {
+                            mixModeProgress = this.media.getAttribute('sonogramm-mixblend-graph');
+                            sonogrammProgress.style.mixBlendMode = mixModeProgress;
+                        }
+                        if (this.media.hasAttribute('sonogramm-mixblend-progress-color')) {
+                            mixColorProgress = this.media.getAttribute('sonogramm-mixblend-graph-color');
+                            sonogrammProgress.style.backgroundColor = mixColorProgress;
+                        }
+                    }
 
                     if (sonogrammWrapper === null) {
                         sonogrammWrapper = this.media.previousSibling;

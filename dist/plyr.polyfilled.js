@@ -11060,6 +11060,32 @@ typeof navigator === "object" && (function (global, factory) {
             sonogrammProgress.style.width = '0';
             sonogrammProgress.style.backgroundColor = this.media.hasAttribute('data-progress-color') ? this.media.getAttribute('data-progress-color') : hexToRGB('#1aafff', .5);
             sonogrammProgress.classList.add('sonogramm-progress');
+            var mixModeGraph = null;
+            var mixColorGraph = null;
+            var mixModeProgress = null;
+            var mixColorProgress = null;
+
+            if (this.media.hasAttribute('sonogramm-mixblend-mode')) {
+              if (this.media.hasAttribute('sonogramm-mixblend-graph')) {
+                mixModeGraph = this.media.getAttribute('sonogramm-mixblend-graph');
+                sonogrammImage.style.mixBlendMode = mixModeGraph;
+              }
+
+              if (this.media.hasAttribute('sonogramm-mixblend-graph-color')) {
+                mixColorGraph = this.media.getAttribute('sonogramm-mixblend-graph-color');
+                sonogrammImage.style.backgroundColor = mixColorGraph;
+              }
+
+              if (this.media.hasAttribute('sonogramm-mixblend-progress')) {
+                mixModeProgress = this.media.getAttribute('sonogramm-mixblend-graph');
+                sonogrammProgress.style.mixBlendMode = mixModeProgress;
+              }
+
+              if (this.media.hasAttribute('sonogramm-mixblend-progress-color')) {
+                mixColorProgress = this.media.getAttribute('sonogramm-mixblend-graph-color');
+                sonogrammProgress.style.backgroundColor = mixColorProgress;
+              }
+            }
 
             if (sonogrammWrapper === null) {
               sonogrammWrapper = this.media.previousSibling;

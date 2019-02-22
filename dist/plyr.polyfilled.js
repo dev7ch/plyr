@@ -1304,27 +1304,6 @@ typeof navigator === "object" && (function (global, factory) {
     _redefine(_global, NUMBER, $Number);
   }
 
-  // most Object methods by ES6 should accept primitives
-
-
-
-  var _objectSap = function (KEY, exec) {
-    var fn = (_core.Object || {})[KEY] || Object[KEY];
-    var exp = {};
-    exp[KEY] = exec(fn);
-    _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
-  };
-
-  // 19.1.2.14 Object.keys(O)
-
-
-
-  _objectSap('keys', function () {
-    return function keys(it) {
-      return _objectKeys(_toObject(it));
-    };
-  });
-
   // 7.2.8 IsRegExp(argument)
 
 
@@ -1334,53 +1313,38 @@ typeof navigator === "object" && (function (global, factory) {
     return _isObject(it) && ((isRegExp = it[MATCH]) !== undefined ? !!isRegExp : _cof(it) == 'RegExp');
   };
 
-  // helper for String#{startsWith, endsWith, includes}
+  // 7.3.20 SpeciesConstructor(O, defaultConstructor)
 
 
-
-  var _stringContext = function (that, searchString, NAME) {
-    if (_isRegexp(searchString)) throw TypeError('String#' + NAME + " doesn't accept regex!");
-    return String(_defined(that));
+  var SPECIES$1 = _wks('species');
+  var _speciesConstructor = function (O, D) {
+    var C = _anObject(O).constructor;
+    var S;
+    return C === undefined || (S = _anObject(C)[SPECIES$1]) == undefined ? D : _aFunction(S);
   };
 
-  var MATCH$1 = _wks('match');
-  var _failsIsRegexp = function (KEY) {
-    var re = /./;
-    try {
-      '/./'[KEY](re);
-    } catch (e) {
-      try {
-        re[MATCH$1] = false;
-        return !'/./'[KEY](re);
-      } catch (f) { /* empty */ }
-    } return true;
+  // true  -> String#at
+  // false -> String#codePointAt
+  var _stringAt = function (TO_STRING) {
+    return function (that, pos) {
+      var s = String(_defined(that));
+      var i = _toInteger(pos);
+      var l = s.length;
+      var a, b;
+      if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
+      a = s.charCodeAt(i);
+      return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
+        ? TO_STRING ? s.charAt(i) : a
+        : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
+    };
   };
 
-  var INCLUDES = 'includes';
+  var at = _stringAt(true);
 
-  _export(_export.P + _export.F * _failsIsRegexp(INCLUDES), 'String', {
-    includes: function includes(searchString /* , position = 0 */) {
-      return !!~_stringContext(this, searchString, INCLUDES)
-        .indexOf(searchString, arguments.length > 1 ? arguments[1] : undefined);
-    }
-  });
-
-  // https://github.com/tc39/Array.prototype.includes
-
-  var $includes = _arrayIncludes(true);
-
-  _export(_export.P, 'Array', {
-    includes: function includes(el /* , fromIndex = 0 */) {
-      return $includes(this, el, arguments.length > 1 ? arguments[1] : undefined);
-    }
-  });
-
-  _addToUnscopables('includes');
-
-  // 7.2.9 SameValue(x, y)
-  var _sameValue = Object.is || function is(x, y) {
-    // eslint-disable-next-line no-self-compare
-    return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
+   // `AdvanceStringIndex` abstract operation
+  // https://tc39.github.io/ecma262/#sec-advancestringindex
+  var _advanceStringIndex = function (S, index, unicode) {
+    return index + (unicode ? at(S, index).length : 1);
   };
 
   var builtinExec = RegExp.prototype.exec;
@@ -1478,7 +1442,7 @@ typeof navigator === "object" && (function (global, factory) {
     exec: _regexpExec
   });
 
-  var SPECIES$1 = _wks('species');
+  var SPECIES$2 = _wks('species');
 
   var REPLACE_SUPPORTS_NAMED_GROUPS = !_fails(function () {
     // #replace needs built-in support for named groups.
@@ -1521,7 +1485,7 @@ typeof navigator === "object" && (function (global, factory) {
         // RegExp[@@split] doesn't call the regex's exec method, but first creates
         // a new one. We need to return the patched regex when creating the new one.
         re.constructor = {};
-        re.constructor[SPECIES$1] = function () { return re; };
+        re.constructor[SPECIES$2] = function () { return re; };
       }
       re[SYMBOL]('');
       return !execCalled;
@@ -1564,6 +1528,312 @@ typeof navigator === "object" && (function (global, factory) {
         : function (string) { return rxfn.call(string, this); }
       );
     }
+  };
+
+  var $min = Math.min;
+  var $push = [].push;
+  var $SPLIT = 'split';
+  var LENGTH = 'length';
+  var LAST_INDEX$1 = 'lastIndex';
+  var MAX_UINT32 = 0xffffffff;
+
+  // babel-minify transpiles RegExp('x', 'y') -> /x/y and it causes SyntaxError
+  var SUPPORTS_Y = !_fails(function () { });
+
+  // @@split logic
+  _fixReWks('split', 2, function (defined, SPLIT, $split, maybeCallNative) {
+    var internalSplit;
+    if (
+      'abbc'[$SPLIT](/(b)*/)[1] == 'c' ||
+      'test'[$SPLIT](/(?:)/, -1)[LENGTH] != 4 ||
+      'ab'[$SPLIT](/(?:ab)*/)[LENGTH] != 2 ||
+      '.'[$SPLIT](/(.?)(.?)/)[LENGTH] != 4 ||
+      '.'[$SPLIT](/()()/)[LENGTH] > 1 ||
+      ''[$SPLIT](/.?/)[LENGTH]
+    ) {
+      // based on es5-shim implementation, need to rework it
+      internalSplit = function (separator, limit) {
+        var string = String(this);
+        if (separator === undefined && limit === 0) return [];
+        // If `separator` is not a regex, use native split
+        if (!_isRegexp(separator)) return $split.call(string, separator, limit);
+        var output = [];
+        var flags = (separator.ignoreCase ? 'i' : '') +
+                    (separator.multiline ? 'm' : '') +
+                    (separator.unicode ? 'u' : '') +
+                    (separator.sticky ? 'y' : '');
+        var lastLastIndex = 0;
+        var splitLimit = limit === undefined ? MAX_UINT32 : limit >>> 0;
+        // Make `global` and avoid `lastIndex` issues by working with a copy
+        var separatorCopy = new RegExp(separator.source, flags + 'g');
+        var match, lastIndex, lastLength;
+        while (match = _regexpExec.call(separatorCopy, string)) {
+          lastIndex = separatorCopy[LAST_INDEX$1];
+          if (lastIndex > lastLastIndex) {
+            output.push(string.slice(lastLastIndex, match.index));
+            if (match[LENGTH] > 1 && match.index < string[LENGTH]) $push.apply(output, match.slice(1));
+            lastLength = match[0][LENGTH];
+            lastLastIndex = lastIndex;
+            if (output[LENGTH] >= splitLimit) break;
+          }
+          if (separatorCopy[LAST_INDEX$1] === match.index) separatorCopy[LAST_INDEX$1]++; // Avoid an infinite loop
+        }
+        if (lastLastIndex === string[LENGTH]) {
+          if (lastLength || !separatorCopy.test('')) output.push('');
+        } else output.push(string.slice(lastLastIndex));
+        return output[LENGTH] > splitLimit ? output.slice(0, splitLimit) : output;
+      };
+    // Chakra, V8
+    } else if ('0'[$SPLIT](undefined, 0)[LENGTH]) {
+      internalSplit = function (separator, limit) {
+        return separator === undefined && limit === 0 ? [] : $split.call(this, separator, limit);
+      };
+    } else {
+      internalSplit = $split;
+    }
+
+    return [
+      // `String.prototype.split` method
+      // https://tc39.github.io/ecma262/#sec-string.prototype.split
+      function split(separator, limit) {
+        var O = defined(this);
+        var splitter = separator == undefined ? undefined : separator[SPLIT];
+        return splitter !== undefined
+          ? splitter.call(separator, O, limit)
+          : internalSplit.call(String(O), separator, limit);
+      },
+      // `RegExp.prototype[@@split]` method
+      // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@split
+      //
+      // NOTE: This cannot be properly polyfilled in engines that don't support
+      // the 'y' flag.
+      function (regexp, limit) {
+        var res = maybeCallNative(internalSplit, regexp, this, limit, internalSplit !== $split);
+        if (res.done) return res.value;
+
+        var rx = _anObject(regexp);
+        var S = String(this);
+        var C = _speciesConstructor(rx, RegExp);
+
+        var unicodeMatching = rx.unicode;
+        var flags = (rx.ignoreCase ? 'i' : '') +
+                    (rx.multiline ? 'm' : '') +
+                    (rx.unicode ? 'u' : '') +
+                    (SUPPORTS_Y ? 'y' : 'g');
+
+        // ^(? + rx + ) is needed, in combination with some S slicing, to
+        // simulate the 'y' flag.
+        var splitter = new C(SUPPORTS_Y ? rx : '^(?:' + rx.source + ')', flags);
+        var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
+        if (lim === 0) return [];
+        if (S.length === 0) return _regexpExecAbstract(splitter, S) === null ? [S] : [];
+        var p = 0;
+        var q = 0;
+        var A = [];
+        while (q < S.length) {
+          splitter.lastIndex = SUPPORTS_Y ? q : 0;
+          var z = _regexpExecAbstract(splitter, SUPPORTS_Y ? S : S.slice(q));
+          var e;
+          if (
+            z === null ||
+            (e = $min(_toLength(splitter.lastIndex + (SUPPORTS_Y ? 0 : q)), S.length)) === p
+          ) {
+            q = _advanceStringIndex(S, q, unicodeMatching);
+          } else {
+            A.push(S.slice(p, q));
+            if (A.length === lim) return A;
+            for (var i = 1; i <= z.length - 1; i++) {
+              A.push(z[i]);
+              if (A.length === lim) return A;
+            }
+            q = p = e;
+          }
+        }
+        A.push(S.slice(p));
+        return A;
+      }
+    ];
+  });
+
+  var max$1 = Math.max;
+  var min$2 = Math.min;
+  var floor$1 = Math.floor;
+  var SUBSTITUTION_SYMBOLS = /\$([$&`']|\d\d?|<[^>]*>)/g;
+  var SUBSTITUTION_SYMBOLS_NO_NAMED = /\$([$&`']|\d\d?)/g;
+
+  var maybeToString = function (it) {
+    return it === undefined ? it : String(it);
+  };
+
+  // @@replace logic
+  _fixReWks('replace', 2, function (defined, REPLACE, $replace, maybeCallNative) {
+    return [
+      // `String.prototype.replace` method
+      // https://tc39.github.io/ecma262/#sec-string.prototype.replace
+      function replace(searchValue, replaceValue) {
+        var O = defined(this);
+        var fn = searchValue == undefined ? undefined : searchValue[REPLACE];
+        return fn !== undefined
+          ? fn.call(searchValue, O, replaceValue)
+          : $replace.call(String(O), searchValue, replaceValue);
+      },
+      // `RegExp.prototype[@@replace]` method
+      // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@replace
+      function (regexp, replaceValue) {
+        var res = maybeCallNative($replace, regexp, this, replaceValue);
+        if (res.done) return res.value;
+
+        var rx = _anObject(regexp);
+        var S = String(this);
+        var functionalReplace = typeof replaceValue === 'function';
+        if (!functionalReplace) replaceValue = String(replaceValue);
+        var global = rx.global;
+        if (global) {
+          var fullUnicode = rx.unicode;
+          rx.lastIndex = 0;
+        }
+        var results = [];
+        while (true) {
+          var result = _regexpExecAbstract(rx, S);
+          if (result === null) break;
+          results.push(result);
+          if (!global) break;
+          var matchStr = String(result[0]);
+          if (matchStr === '') rx.lastIndex = _advanceStringIndex(S, _toLength(rx.lastIndex), fullUnicode);
+        }
+        var accumulatedResult = '';
+        var nextSourcePosition = 0;
+        for (var i = 0; i < results.length; i++) {
+          result = results[i];
+          var matched = String(result[0]);
+          var position = max$1(min$2(_toInteger(result.index), S.length), 0);
+          var captures = [];
+          // NOTE: This is equivalent to
+          //   captures = result.slice(1).map(maybeToString)
+          // but for some reason `nativeSlice.call(result, 1, result.length)` (called in
+          // the slice polyfill when slicing native arrays) "doesn't work" in safari 9 and
+          // causes a crash (https://pastebin.com/N21QzeQA) when trying to debug it.
+          for (var j = 1; j < result.length; j++) captures.push(maybeToString(result[j]));
+          var namedCaptures = result.groups;
+          if (functionalReplace) {
+            var replacerArgs = [matched].concat(captures, position, S);
+            if (namedCaptures !== undefined) replacerArgs.push(namedCaptures);
+            var replacement = String(replaceValue.apply(undefined, replacerArgs));
+          } else {
+            replacement = getSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
+          }
+          if (position >= nextSourcePosition) {
+            accumulatedResult += S.slice(nextSourcePosition, position) + replacement;
+            nextSourcePosition = position + matched.length;
+          }
+        }
+        return accumulatedResult + S.slice(nextSourcePosition);
+      }
+    ];
+
+      // https://tc39.github.io/ecma262/#sec-getsubstitution
+    function getSubstitution(matched, str, position, captures, namedCaptures, replacement) {
+      var tailPos = position + matched.length;
+      var m = captures.length;
+      var symbols = SUBSTITUTION_SYMBOLS_NO_NAMED;
+      if (namedCaptures !== undefined) {
+        namedCaptures = _toObject(namedCaptures);
+        symbols = SUBSTITUTION_SYMBOLS;
+      }
+      return $replace.call(replacement, symbols, function (match, ch) {
+        var capture;
+        switch (ch.charAt(0)) {
+          case '$': return '$';
+          case '&': return matched;
+          case '`': return str.slice(0, position);
+          case "'": return str.slice(tailPos);
+          case '<':
+            capture = namedCaptures[ch.slice(1, -1)];
+            break;
+          default: // \d\d?
+            var n = +ch;
+            if (n === 0) return match;
+            if (n > m) {
+              var f = floor$1(n / 10);
+              if (f === 0) return match;
+              if (f <= m) return captures[f - 1] === undefined ? ch.charAt(1) : captures[f - 1] + ch.charAt(1);
+              return match;
+            }
+            capture = captures[n - 1];
+        }
+        return capture === undefined ? '' : capture;
+      });
+    }
+  });
+
+  // most Object methods by ES6 should accept primitives
+
+
+
+  var _objectSap = function (KEY, exec) {
+    var fn = (_core.Object || {})[KEY] || Object[KEY];
+    var exp = {};
+    exp[KEY] = exec(fn);
+    _export(_export.S + _export.F * _fails(function () { fn(1); }), 'Object', exp);
+  };
+
+  // 19.1.2.14 Object.keys(O)
+
+
+
+  _objectSap('keys', function () {
+    return function keys(it) {
+      return _objectKeys(_toObject(it));
+    };
+  });
+
+  // helper for String#{startsWith, endsWith, includes}
+
+
+
+  var _stringContext = function (that, searchString, NAME) {
+    if (_isRegexp(searchString)) throw TypeError('String#' + NAME + " doesn't accept regex!");
+    return String(_defined(that));
+  };
+
+  var MATCH$1 = _wks('match');
+  var _failsIsRegexp = function (KEY) {
+    var re = /./;
+    try {
+      '/./'[KEY](re);
+    } catch (e) {
+      try {
+        re[MATCH$1] = false;
+        return !'/./'[KEY](re);
+      } catch (f) { /* empty */ }
+    } return true;
+  };
+
+  var INCLUDES = 'includes';
+
+  _export(_export.P + _export.F * _failsIsRegexp(INCLUDES), 'String', {
+    includes: function includes(searchString /* , position = 0 */) {
+      return !!~_stringContext(this, searchString, INCLUDES)
+        .indexOf(searchString, arguments.length > 1 ? arguments[1] : undefined);
+    }
+  });
+
+  // https://github.com/tc39/Array.prototype.includes
+
+  var $includes = _arrayIncludes(true);
+
+  _export(_export.P, 'Array', {
+    includes: function includes(el /* , fromIndex = 0 */) {
+      return $includes(this, el, arguments.length > 1 ? arguments[1] : undefined);
+    }
+  });
+
+  _addToUnscopables('includes');
+
+  // 7.2.9 SameValue(x, y)
+  var _sameValue = Object.is || function is(x, y) {
+    // eslint-disable-next-line no-self-compare
+    return x === y ? x !== 0 || 1 / x === 1 / y : x != x && y != y;
   };
 
   // @@search logic
@@ -1796,22 +2066,6 @@ typeof navigator === "object" && (function (global, factory) {
       if (explicit) for (key$1 in es6_array_iterator) if (!proto$1[key$1]) _redefine(proto$1, key$1, es6_array_iterator[key$1], true);
     }
   }
-
-  // true  -> String#at
-  // false -> String#codePointAt
-  var _stringAt = function (TO_STRING) {
-    return function (that, pos) {
-      var s = String(_defined(that));
-      var i = _toInteger(pos);
-      var l = s.length;
-      var a, b;
-      if (i < 0 || i >= l) return TO_STRING ? '' : undefined;
-      a = s.charCodeAt(i);
-      return a < 0xd800 || a > 0xdbff || i + 1 === l || (b = s.charCodeAt(i + 1)) < 0xdc00 || b > 0xdfff
-        ? TO_STRING ? s.charAt(i) : a
-        : TO_STRING ? s.slice(i, i + 2) : (a - 0xd800 << 10) + (b - 0xdc00) + 0x10000;
-    };
-  };
 
   var $at = _stringAt(true);
 
@@ -2313,149 +2567,6 @@ typeof navigator === "object" && (function (global, factory) {
 
   _export(_export.S + _export.F, 'Object', { assign: _objectAssign });
 
-  // 7.3.20 SpeciesConstructor(O, defaultConstructor)
-
-
-  var SPECIES$2 = _wks('species');
-  var _speciesConstructor = function (O, D) {
-    var C = _anObject(O).constructor;
-    var S;
-    return C === undefined || (S = _anObject(C)[SPECIES$2]) == undefined ? D : _aFunction(S);
-  };
-
-  var at = _stringAt(true);
-
-   // `AdvanceStringIndex` abstract operation
-  // https://tc39.github.io/ecma262/#sec-advancestringindex
-  var _advanceStringIndex = function (S, index, unicode) {
-    return index + (unicode ? at(S, index).length : 1);
-  };
-
-  var $min = Math.min;
-  var $push = [].push;
-  var $SPLIT = 'split';
-  var LENGTH = 'length';
-  var LAST_INDEX$1 = 'lastIndex';
-  var MAX_UINT32 = 0xffffffff;
-
-  // babel-minify transpiles RegExp('x', 'y') -> /x/y and it causes SyntaxError
-  var SUPPORTS_Y = !_fails(function () { });
-
-  // @@split logic
-  _fixReWks('split', 2, function (defined, SPLIT, $split, maybeCallNative) {
-    var internalSplit;
-    if (
-      'abbc'[$SPLIT](/(b)*/)[1] == 'c' ||
-      'test'[$SPLIT](/(?:)/, -1)[LENGTH] != 4 ||
-      'ab'[$SPLIT](/(?:ab)*/)[LENGTH] != 2 ||
-      '.'[$SPLIT](/(.?)(.?)/)[LENGTH] != 4 ||
-      '.'[$SPLIT](/()()/)[LENGTH] > 1 ||
-      ''[$SPLIT](/.?/)[LENGTH]
-    ) {
-      // based on es5-shim implementation, need to rework it
-      internalSplit = function (separator, limit) {
-        var string = String(this);
-        if (separator === undefined && limit === 0) return [];
-        // If `separator` is not a regex, use native split
-        if (!_isRegexp(separator)) return $split.call(string, separator, limit);
-        var output = [];
-        var flags = (separator.ignoreCase ? 'i' : '') +
-                    (separator.multiline ? 'm' : '') +
-                    (separator.unicode ? 'u' : '') +
-                    (separator.sticky ? 'y' : '');
-        var lastLastIndex = 0;
-        var splitLimit = limit === undefined ? MAX_UINT32 : limit >>> 0;
-        // Make `global` and avoid `lastIndex` issues by working with a copy
-        var separatorCopy = new RegExp(separator.source, flags + 'g');
-        var match, lastIndex, lastLength;
-        while (match = _regexpExec.call(separatorCopy, string)) {
-          lastIndex = separatorCopy[LAST_INDEX$1];
-          if (lastIndex > lastLastIndex) {
-            output.push(string.slice(lastLastIndex, match.index));
-            if (match[LENGTH] > 1 && match.index < string[LENGTH]) $push.apply(output, match.slice(1));
-            lastLength = match[0][LENGTH];
-            lastLastIndex = lastIndex;
-            if (output[LENGTH] >= splitLimit) break;
-          }
-          if (separatorCopy[LAST_INDEX$1] === match.index) separatorCopy[LAST_INDEX$1]++; // Avoid an infinite loop
-        }
-        if (lastLastIndex === string[LENGTH]) {
-          if (lastLength || !separatorCopy.test('')) output.push('');
-        } else output.push(string.slice(lastLastIndex));
-        return output[LENGTH] > splitLimit ? output.slice(0, splitLimit) : output;
-      };
-    // Chakra, V8
-    } else if ('0'[$SPLIT](undefined, 0)[LENGTH]) {
-      internalSplit = function (separator, limit) {
-        return separator === undefined && limit === 0 ? [] : $split.call(this, separator, limit);
-      };
-    } else {
-      internalSplit = $split;
-    }
-
-    return [
-      // `String.prototype.split` method
-      // https://tc39.github.io/ecma262/#sec-string.prototype.split
-      function split(separator, limit) {
-        var O = defined(this);
-        var splitter = separator == undefined ? undefined : separator[SPLIT];
-        return splitter !== undefined
-          ? splitter.call(separator, O, limit)
-          : internalSplit.call(String(O), separator, limit);
-      },
-      // `RegExp.prototype[@@split]` method
-      // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@split
-      //
-      // NOTE: This cannot be properly polyfilled in engines that don't support
-      // the 'y' flag.
-      function (regexp, limit) {
-        var res = maybeCallNative(internalSplit, regexp, this, limit, internalSplit !== $split);
-        if (res.done) return res.value;
-
-        var rx = _anObject(regexp);
-        var S = String(this);
-        var C = _speciesConstructor(rx, RegExp);
-
-        var unicodeMatching = rx.unicode;
-        var flags = (rx.ignoreCase ? 'i' : '') +
-                    (rx.multiline ? 'm' : '') +
-                    (rx.unicode ? 'u' : '') +
-                    (SUPPORTS_Y ? 'y' : 'g');
-
-        // ^(? + rx + ) is needed, in combination with some S slicing, to
-        // simulate the 'y' flag.
-        var splitter = new C(SUPPORTS_Y ? rx : '^(?:' + rx.source + ')', flags);
-        var lim = limit === undefined ? MAX_UINT32 : limit >>> 0;
-        if (lim === 0) return [];
-        if (S.length === 0) return _regexpExecAbstract(splitter, S) === null ? [S] : [];
-        var p = 0;
-        var q = 0;
-        var A = [];
-        while (q < S.length) {
-          splitter.lastIndex = SUPPORTS_Y ? q : 0;
-          var z = _regexpExecAbstract(splitter, SUPPORTS_Y ? S : S.slice(q));
-          var e;
-          if (
-            z === null ||
-            (e = $min(_toLength(splitter.lastIndex + (SUPPORTS_Y ? 0 : q)), S.length)) === p
-          ) {
-            q = _advanceStringIndex(S, q, unicodeMatching);
-          } else {
-            A.push(S.slice(p, q));
-            if (A.length === lim) return A;
-            for (var i = 1; i <= z.length - 1; i++) {
-              A.push(z[i]);
-              if (A.length === lim) return A;
-            }
-            q = p = e;
-          }
-        }
-        A.push(S.slice(p));
-        return A;
-      }
-    ];
-  });
-
   var isEnum = _objectPie.f;
   var _objectToArray = function (isEntries) {
     return function (it) {
@@ -2488,117 +2599,6 @@ typeof navigator === "object" && (function (global, factory) {
   _export(_export.S, 'Object', {
     values: function values(it) {
       return $values(it);
-    }
-  });
-
-  var max$1 = Math.max;
-  var min$2 = Math.min;
-  var floor$1 = Math.floor;
-  var SUBSTITUTION_SYMBOLS = /\$([$&`']|\d\d?|<[^>]*>)/g;
-  var SUBSTITUTION_SYMBOLS_NO_NAMED = /\$([$&`']|\d\d?)/g;
-
-  var maybeToString = function (it) {
-    return it === undefined ? it : String(it);
-  };
-
-  // @@replace logic
-  _fixReWks('replace', 2, function (defined, REPLACE, $replace, maybeCallNative) {
-    return [
-      // `String.prototype.replace` method
-      // https://tc39.github.io/ecma262/#sec-string.prototype.replace
-      function replace(searchValue, replaceValue) {
-        var O = defined(this);
-        var fn = searchValue == undefined ? undefined : searchValue[REPLACE];
-        return fn !== undefined
-          ? fn.call(searchValue, O, replaceValue)
-          : $replace.call(String(O), searchValue, replaceValue);
-      },
-      // `RegExp.prototype[@@replace]` method
-      // https://tc39.github.io/ecma262/#sec-regexp.prototype-@@replace
-      function (regexp, replaceValue) {
-        var res = maybeCallNative($replace, regexp, this, replaceValue);
-        if (res.done) return res.value;
-
-        var rx = _anObject(regexp);
-        var S = String(this);
-        var functionalReplace = typeof replaceValue === 'function';
-        if (!functionalReplace) replaceValue = String(replaceValue);
-        var global = rx.global;
-        if (global) {
-          var fullUnicode = rx.unicode;
-          rx.lastIndex = 0;
-        }
-        var results = [];
-        while (true) {
-          var result = _regexpExecAbstract(rx, S);
-          if (result === null) break;
-          results.push(result);
-          if (!global) break;
-          var matchStr = String(result[0]);
-          if (matchStr === '') rx.lastIndex = _advanceStringIndex(S, _toLength(rx.lastIndex), fullUnicode);
-        }
-        var accumulatedResult = '';
-        var nextSourcePosition = 0;
-        for (var i = 0; i < results.length; i++) {
-          result = results[i];
-          var matched = String(result[0]);
-          var position = max$1(min$2(_toInteger(result.index), S.length), 0);
-          var captures = [];
-          // NOTE: This is equivalent to
-          //   captures = result.slice(1).map(maybeToString)
-          // but for some reason `nativeSlice.call(result, 1, result.length)` (called in
-          // the slice polyfill when slicing native arrays) "doesn't work" in safari 9 and
-          // causes a crash (https://pastebin.com/N21QzeQA) when trying to debug it.
-          for (var j = 1; j < result.length; j++) captures.push(maybeToString(result[j]));
-          var namedCaptures = result.groups;
-          if (functionalReplace) {
-            var replacerArgs = [matched].concat(captures, position, S);
-            if (namedCaptures !== undefined) replacerArgs.push(namedCaptures);
-            var replacement = String(replaceValue.apply(undefined, replacerArgs));
-          } else {
-            replacement = getSubstitution(matched, S, position, captures, namedCaptures, replaceValue);
-          }
-          if (position >= nextSourcePosition) {
-            accumulatedResult += S.slice(nextSourcePosition, position) + replacement;
-            nextSourcePosition = position + matched.length;
-          }
-        }
-        return accumulatedResult + S.slice(nextSourcePosition);
-      }
-    ];
-
-      // https://tc39.github.io/ecma262/#sec-getsubstitution
-    function getSubstitution(matched, str, position, captures, namedCaptures, replacement) {
-      var tailPos = position + matched.length;
-      var m = captures.length;
-      var symbols = SUBSTITUTION_SYMBOLS_NO_NAMED;
-      if (namedCaptures !== undefined) {
-        namedCaptures = _toObject(namedCaptures);
-        symbols = SUBSTITUTION_SYMBOLS;
-      }
-      return $replace.call(replacement, symbols, function (match, ch) {
-        var capture;
-        switch (ch.charAt(0)) {
-          case '$': return '$';
-          case '&': return matched;
-          case '`': return str.slice(0, position);
-          case "'": return str.slice(tailPos);
-          case '<':
-            capture = namedCaptures[ch.slice(1, -1)];
-            break;
-          default: // \d\d?
-            var n = +ch;
-            if (n === 0) return match;
-            if (n > m) {
-              var f = floor$1(n / 10);
-              if (f === 0) return match;
-              if (f <= m) return captures[f - 1] === undefined ? ch.charAt(1) : captures[f - 1] + ch.charAt(1);
-              return match;
-            }
-            capture = captures[n - 1];
-        }
-        return capture === undefined ? '' : capture;
-      });
     }
   });
 
@@ -10932,10 +10932,24 @@ typeof navigator === "object" && (function (global, factory) {
 
       var iframe = null;
       var url = null;
-      var sonogramm = this.media.hasAttribute('data-sonogramm') ? this.media.getAttribute('data-sonogramm') : null;
+      var sonogramm = this.media.getAttribute('sonogramm') ? this.media.getAttribute('sonogramm-preload') || this.media.getAttribute('sonogramm-image') : null;
+      var sonogrammParams = this.media.hasAttribute('sonogramm-params') || this.media.hasAttribute('sonogramm-preload-params') ? this.media.getAttribute('sonogramm-params') || this.media.getAttribute('sonogramm-preload-params') : null;
+
+      if (!sonogrammParams) {
+        sonogrammParams = !this.media.hasAttribute('sonogramm-image') ? '$$poster/resize/formatJPG/size800x100/stretch' : '';
+      }
 
       if (sonogramm) {
         this.debug.log('Found sonogramm: ', sonogramm);
+        this.debug.log('Found sonogramm Params: ', sonogrammParams);
+      }
+
+      if (this.media.hasAttribute('sonogramm-preload')) {
+        sonogramm = this.media.getAttribute('sonogramm-preload');
+        this.debug.log('Preload Sonogramm url found: ', sonogramm);
+      } else if (this.media.hasAttribute('sonogramm-image')) {
+        sonogramm = this.media.getAttribute('sonogramm-image');
+        this.debug.log('Sonogramm Image url found: ', sonogramm);
       } // Different setup based on type
 
 
@@ -10995,31 +11009,62 @@ typeof navigator === "object" && (function (global, factory) {
         case 'audio':
           this.type = type;
           this.provider = providers.html5;
+          this.config.settings = [];
 
           if (sonogramm) {
             var id = "".concat(this.media.id, "-sonogramm");
             var sonogrammImage = new Image();
             var sonogrammControl = document.createElement('div');
             var sonogrammProgress = document.createElement('div');
-            var sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media;
-            sonogrammControl.id = id;
+            var sonogrammFiletype = /[.]/.exec(sonogramm) ? /[^.]+$/.exec(sonogramm)[0] : undefined;
+
+            if (sonogrammParams !== '' || sonogrammParams) {
+              sonogrammFiletype = sonogrammFiletype !== undefined ? sonogrammFiletype.replace('/master', '') : null;
+            }
+
+            this.debug.log('File type', sonogrammFiletype.replace('/master', ''));
+            var sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : null;
+
+            var hexToRGB = function hexToRGB(hex, alpha) {
+              var r = parseInt(hex.slice(1, 3), 16);
+              var g = parseInt(hex.slice(3, 5), 16);
+              var b = parseInt(hex.slice(5, 7), 16);
+
+              if (alpha) {
+                return "rgba(".concat(r, ", ").concat(g, ", ").concat(b, ", ").concat(alpha, ")");
+              }
+
+              return "rgb(".concat(r, ", ").concat(g, ", ").concat(b, ")");
+            };
+
+            sonogrammControl.id = "".concat(id, "-control");
             sonogrammControl.style.position = 'relative';
             sonogrammControl.classList.add('sonogramm-control');
             sonogrammImage.id = "".concat(id, "-image");
-            sonogrammImage.src = sonogramm;
-            sonogrammImage.maxWidth = '100%';
+            sonogrammImage.src = sonogrammFiletype ? "".concat(sonogramm.split(sonogrammFiletype)[0] + sonogrammFiletype + sonogrammParams) : sonogramm + sonogrammParams;
+            sonogrammImage.style.objectFit = 'contain';
+            sonogrammImage.style.height = 'auto';
+            sonogrammImage.style.maxWidth = '100%';
             sonogrammImage.classList.add('sonogramm-image');
             sonogrammProgress.id = "".concat(id, "-progress");
             sonogrammProgress.style.position = 'absolute';
             sonogrammProgress.style.top = '0';
-            sonogrammProgress.style.height = '100%';
+            sonogrammProgress.style.height = this.media.hasAttribute('sonogramm-height') ? this.media.hasAttribute('sonogramm-height') : '100%';
             sonogrammProgress.style.width = '0';
-            sonogrammProgress.style.opacity = '.4';
-            sonogrammProgress.style.backgroundColor = 'green';
+            sonogrammProgress.style.backgroundColor = this.media.hasAttribute('data-progress-color') ? this.media.getAttribute('data-progress-color') : hexToRGB('#1aafff', .5);
             sonogrammProgress.classList.add('sonogramm-progress');
-            sonogrammWrapper.appendChild(sonogrammControl);
-            sonogrammControl.appendChild(sonogrammImage);
-            sonogrammControl.appendChild(sonogrammProgress);
+
+            if (sonogrammWrapper === null) {
+              sonogrammWrapper = this.media.previousSibling;
+              sonogrammImage.style.borderRadius = '4px';
+              sonogrammWrapper.parentNode.insertBefore(sonogrammControl, sonogrammWrapper);
+              sonogrammControl.appendChild(sonogrammImage);
+              sonogrammControl.appendChild(sonogrammProgress);
+            } else {
+              sonogrammWrapper.appendChild(sonogrammControl);
+              sonogrammControl.appendChild(sonogrammImage);
+              sonogrammControl.appendChild(sonogrammProgress);
+            }
           } // Get config from attributes
 
 
@@ -11051,40 +11096,37 @@ typeof navigator === "object" && (function (global, factory) {
       } // Audio sonogramm
 
 
-      if (sonogramm && this.media && this.elements.inputs) {
+      if (sonogramm && this.media && this.elements.inputs && this.type === 'audio') {
         var progress = document.getElementById("".concat(this.media.id, "-sonogramm-progress"));
         var seeker = this.elements.inputs;
-        var wrapper = document.getElementById("".concat(this.media.id, "-sonogramm"));
+        var wrapper = document.getElementById("".concat(this.media.id, "-sonogramm-control"));
         var interaction = document.createElement('div');
 
         if (progress && seeker && wrapper) {
           wrapper.maxWidth = '100%';
-          interaction.style.backgroundColor = 'transparent';
           interaction.style.height = '100%';
           interaction.id = "".concat(this.media.id, "-progress");
           interaction.style.position = 'absolute';
           interaction.style.top = '0';
           interaction.style.height = '100%';
           interaction.style.width = '5px';
+          interaction.style.backgroundColor = 'transparent';
           interaction.style.opcacity = '1';
-          interaction.style.transition = 'left .2s ease-in, opacity .15s ease-in-out, background-color .2s ease-in';
+          interaction.style.visibility = 'visible';
           wrapper.appendChild(interaction);
           var rect = wrapper.getBoundingClientRect();
+          interaction.style.backgroundColor = 'red';
 
-          this.media.ontimeupdate = function () {
-            var state = _this.media.currentTime;
-            var max = _this.media.duration;
-            var current = state / max * 100;
-            progress.style.width = "".concat(current, "%");
-          };
-
-          wrapper.addEventListener('mousemove', function (event) {
-            interaction.style.backgroundColor = 'red';
-            setTimeout(function () {
+          if (!this.media.playing && !this.media.ontimeupdate) {
+            wrapper.addEventListener('mousemove', function (event) {
+              var rect = wrapper.getBoundingClientRect();
               var percent = 100 / rect.width * (event.pageX - rect.left);
               interaction.style.left = "".concat(percent, "%");
-            }, 250);
-          });
+              interaction.style.backgroundColor = 'blue';
+              setTimeout(function () {}, 250);
+            }, false);
+          }
+
           wrapper.addEventListener('click', function (event) {
             event.preventDefault();
             rect = wrapper.getBoundingClientRect();
@@ -11092,7 +11134,15 @@ typeof navigator === "object" && (function (global, factory) {
             var percent = 100 / rect.width * (event.pageX - rect.left);
             progress.style.width = "".concat(percent, "%");
             _this.media.currentTime = max / 100 * percent;
-          });
+          }, false);
+
+          this.media.ontimeupdate = function () {
+            var state = _this.media.currentTime;
+            var max = _this.media.duration;
+            var current = state / max * 100;
+            progress.style.width = "".concat(current, "%");
+            interaction.style.left = "".concat(current, "%");
+          };
         }
       } // Check for support again but with type
 

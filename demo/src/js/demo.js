@@ -16,7 +16,7 @@ import Plyr from '../../../src/js/plyr';
 
     document.addEventListener('DOMContentLoaded', () => {
         Raven.context(() => {
-            const selector = '#player';
+            const selector = ['#player-2', '#player-audio', '#player-audio-3'];
             const container = document.getElementById('container');
 
             if (window.Shr) {
@@ -59,37 +59,40 @@ import Plyr from '../../../src/js/plyr';
             });
 
             // Setup the player
-            const player = new Plyr(selector, {
-                debug: true,
-                title: 'View From A Blue Moon',
-                iconUrl: 'dist/demo.svg',
-                keyboard: {
-                    global: true,
-                },
-                tooltips: {
-                    controls: true,
-                },
-                captions: {
-                    active: true,
-                },
-                keys: {
-                    google: 'AIzaSyDrNwtN3nLH_8rjCmu5Wq3ZCm4MNAVdc0c',
-                },
-                ads: {
-                    enabled: env.prod || env.dev,
-                    publisherId: '918848828995742',
-                },
-                previewThumbnails: {
-                    enabled: true,
-                    src: [
-                        'https://cdn.plyr.io/static/demo/thumbs/100p.vtt',
-                        'https://cdn.plyr.io/static/demo/thumbs/240p.vtt',
-                    ],
-                },
-            });
+
+
+            const players = Array.from(document.querySelectorAll('.hgk-dima-player')).map(p => new Plyr(p,
+                {
+                    debug: true,
+                    title: 'View From A Blue Moon',
+                    iconUrl: 'dist/demo.svg',
+                    keyboard: {
+                        global: true,
+                    },
+                    tooltips: {
+                        controls: true,
+                    },
+                    captions: {
+                        active: true,
+                    },
+                    keys: {
+                        google: 'AIzaSyDrNwtN3nLH_8rjCmu5Wq3ZCm4MNAVdc0c',
+                    },
+                    ads: {
+                        enabled: env.prod || env.dev,
+                        publisherId: '918848828995742',
+                    },
+                    previewThumbnails: {
+                        enabled: true,
+                        src: [
+                            'https://cdn.plyr.io/static/demo/thumbs/100p.vtt',
+                            'https://cdn.plyr.io/static/demo/thumbs/240p.vtt',
+                        ],
+                    },
+                }));
 
             // Expose for tinkering in the console
-            window.player = player;
+            window.player = players;
 
             // Setup type toggle
             const buttons = document.querySelectorAll('[data-source]');
@@ -170,15 +173,15 @@ import Plyr from '../../../src/js/plyr';
                     case types.audio:
                         player.source = {
                             type: 'audio',
-                            title: 'Kishi Bashi &ndash; &ldquo;It All Began With A Burst&rdquo;',
+                            title: 'Demo from Media HGK Server',
                             sources: [
                                 {
-                                    src: 'https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.mp3',
-                                    type: 'audio/mp3',
+                                    src: 'https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master',
+                                    type: 'audio/mp4',
                                 },
                                 {
-                                    src: 'https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.ogg',
-                                    type: 'audio/ogg',
+                                    src: 'https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master',
+                                    type: 'audio/wav',
                                 },
                             ],
                         };

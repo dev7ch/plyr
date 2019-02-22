@@ -11880,10 +11880,24 @@ typeof navigator === "object" && (function () {
 
 	    var iframe = null;
 	    var url = null;
-	    var sonogramm = this.media.hasAttribute('data-sonogramm') ? this.media.getAttribute('data-sonogramm') : null;
+	    var sonogramm = this.media.getAttribute('sonogramm') ? this.media.getAttribute('sonogramm-preload') || this.media.getAttribute('sonogramm-image') : null;
+	    var sonogrammParams = this.media.hasAttribute('sonogramm-params') || this.media.hasAttribute('sonogramm-preload-params') ? this.media.getAttribute('sonogramm-params') || this.media.getAttribute('sonogramm-preload-params') : null;
+
+	    if (!sonogrammParams) {
+	      sonogrammParams = !this.media.hasAttribute('sonogramm-image') ? '$$poster/resize/formatJPG/size800x100/stretch' : '';
+	    }
 
 	    if (sonogramm) {
 	      this.debug.log('Found sonogramm: ', sonogramm);
+	      this.debug.log('Found sonogramm Params: ', sonogrammParams);
+	    }
+
+	    if (this.media.hasAttribute('sonogramm-preload')) {
+	      sonogramm = this.media.getAttribute('sonogramm-preload');
+	      this.debug.log('Preload Sonogramm url found: ', sonogramm);
+	    } else if (this.media.hasAttribute('sonogramm-image')) {
+	      sonogramm = this.media.getAttribute('sonogramm-image');
+	      this.debug.log('Sonogramm Image url found: ', sonogramm);
 	    } // Different setup based on type
 
 
@@ -11943,31 +11957,62 @@ typeof navigator === "object" && (function () {
 	      case 'audio':
 	        this.type = type;
 	        this.provider = providers.html5;
+	        this.config.settings = [];
 
 	        if (sonogramm) {
 	          var id = "".concat(this.media.id, "-sonogramm");
 	          var sonogrammImage = new Image();
 	          var sonogrammControl = document.createElement('div');
 	          var sonogrammProgress = document.createElement('div');
-	          var sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : this.media;
-	          sonogrammControl.id = id;
+	          var sonogrammFiletype = /[.]/.exec(sonogramm) ? /[^.]+$/.exec(sonogramm)[0] : undefined;
+
+	          if (sonogrammParams !== '' || sonogrammParams) {
+	            sonogrammFiletype = sonogrammFiletype !== undefined ? sonogrammFiletype.replace('/master', '') : null;
+	          }
+
+	          this.debug.log('File type', sonogrammFiletype.replace('/master', ''));
+	          var sonogrammWrapper = document.getElementById(id) ? document.getElementById(id) : null;
+
+	          var hexToRGB = function hexToRGB(hex, alpha) {
+	            var r = parseInt(hex.slice(1, 3), 16);
+	            var g = parseInt(hex.slice(3, 5), 16);
+	            var b = parseInt(hex.slice(5, 7), 16);
+
+	            if (alpha) {
+	              return "rgba(".concat(r, ", ").concat(g, ", ").concat(b, ", ").concat(alpha, ")");
+	            }
+
+	            return "rgb(".concat(r, ", ").concat(g, ", ").concat(b, ")");
+	          };
+
+	          sonogrammControl.id = "".concat(id, "-control");
 	          sonogrammControl.style.position = 'relative';
 	          sonogrammControl.classList.add('sonogramm-control');
 	          sonogrammImage.id = "".concat(id, "-image");
-	          sonogrammImage.src = sonogramm;
-	          sonogrammImage.maxWidth = '100%';
+	          sonogrammImage.src = sonogrammFiletype ? "".concat(sonogramm.split(sonogrammFiletype)[0] + sonogrammFiletype + sonogrammParams) : sonogramm + sonogrammParams;
+	          sonogrammImage.style.objectFit = 'contain';
+	          sonogrammImage.style.height = 'auto';
+	          sonogrammImage.style.maxWidth = '100%';
 	          sonogrammImage.classList.add('sonogramm-image');
 	          sonogrammProgress.id = "".concat(id, "-progress");
 	          sonogrammProgress.style.position = 'absolute';
 	          sonogrammProgress.style.top = '0';
-	          sonogrammProgress.style.height = '100%';
+	          sonogrammProgress.style.height = this.media.hasAttribute('sonogramm-height') ? this.media.hasAttribute('sonogramm-height') : '100%';
 	          sonogrammProgress.style.width = '0';
-	          sonogrammProgress.style.opacity = '.4';
-	          sonogrammProgress.style.backgroundColor = 'green';
+	          sonogrammProgress.style.backgroundColor = this.media.hasAttribute('data-progress-color') ? this.media.getAttribute('data-progress-color') : hexToRGB('#1aafff', .5);
 	          sonogrammProgress.classList.add('sonogramm-progress');
-	          sonogrammWrapper.appendChild(sonogrammControl);
-	          sonogrammControl.appendChild(sonogrammImage);
-	          sonogrammControl.appendChild(sonogrammProgress);
+
+	          if (sonogrammWrapper === null) {
+	            sonogrammWrapper = this.media.previousSibling;
+	            sonogrammImage.style.borderRadius = '4px';
+	            sonogrammWrapper.parentNode.insertBefore(sonogrammControl, sonogrammWrapper);
+	            sonogrammControl.appendChild(sonogrammImage);
+	            sonogrammControl.appendChild(sonogrammProgress);
+	          } else {
+	            sonogrammWrapper.appendChild(sonogrammControl);
+	            sonogrammControl.appendChild(sonogrammImage);
+	            sonogrammControl.appendChild(sonogrammProgress);
+	          }
 	        } // Get config from attributes
 
 
@@ -11999,40 +12044,37 @@ typeof navigator === "object" && (function () {
 	    } // Audio sonogramm
 
 
-	    if (sonogramm && this.media && this.elements.inputs) {
+	    if (sonogramm && this.media && this.elements.inputs && this.type === 'audio') {
 	      var progress = document.getElementById("".concat(this.media.id, "-sonogramm-progress"));
 	      var seeker = this.elements.inputs;
-	      var wrapper = document.getElementById("".concat(this.media.id, "-sonogramm"));
+	      var wrapper = document.getElementById("".concat(this.media.id, "-sonogramm-control"));
 	      var interaction = document.createElement('div');
 
 	      if (progress && seeker && wrapper) {
 	        wrapper.maxWidth = '100%';
-	        interaction.style.backgroundColor = 'transparent';
 	        interaction.style.height = '100%';
 	        interaction.id = "".concat(this.media.id, "-progress");
 	        interaction.style.position = 'absolute';
 	        interaction.style.top = '0';
 	        interaction.style.height = '100%';
-	        interaction.style.width = '5px';
+	        interaction.style.width = '2px';
+	        interaction.style.backgroundColor = 'transparent';
 	        interaction.style.opcacity = '1';
-	        interaction.style.transition = 'left .2s ease-in, opacity .15s ease-in-out, background-color .2s ease-in';
+	        interaction.style.visibility = 'visible';
 	        wrapper.appendChild(interaction);
 	        var rect = wrapper.getBoundingClientRect();
+	        interaction.style.backgroundColor = 'red';
 
-	        this.media.ontimeupdate = function () {
-	          var state = _this.media.currentTime;
-	          var max = _this.media.duration;
-	          var current = state / max * 100;
-	          progress.style.width = "".concat(current, "%");
-	        };
-
-	        wrapper.addEventListener('mousemove', function (event) {
-	          interaction.style.backgroundColor = 'red';
-	          setTimeout(function () {
+	        if (!this.media.playing && !this.media.ontimeupdate) {
+	          wrapper.addEventListener('mousemove', function (event) {
+	            var rect = wrapper.getBoundingClientRect();
 	            var percent = 100 / rect.width * (event.pageX - rect.left);
 	            interaction.style.left = "".concat(percent, "%");
-	          }, 250);
-	        });
+	            interaction.style.backgroundColor = 'blue';
+	            setTimeout(function () {}, 250);
+	          }, false);
+	        }
+
 	        wrapper.addEventListener('click', function (event) {
 	          event.preventDefault();
 	          rect = wrapper.getBoundingClientRect();
@@ -12040,7 +12082,15 @@ typeof navigator === "object" && (function () {
 	          var percent = 100 / rect.width * (event.pageX - rect.left);
 	          progress.style.width = "".concat(percent, "%");
 	          _this.media.currentTime = max / 100 * percent;
-	        });
+	        }, false);
+
+	        this.media.ontimeupdate = function () {
+	          var state = _this.media.currentTime;
+	          var max = _this.media.duration;
+	          var current = state / max * 100;
+	          progress.style.width = "".concat(current, "%");
+	          interaction.style.left = "".concat(current, "%");
+	        };
 	      }
 	    } // Check for support again but with type
 
@@ -13045,7 +13095,6 @@ typeof navigator === "object" && (function () {
 	  };
 	  document.addEventListener('DOMContentLoaded', function () {
 	    singleton.context(function () {
-	      var selector = '#player';
 	      var container = document.getElementById('container');
 
 	      if (window.Shr) {
@@ -13085,33 +13134,35 @@ typeof navigator === "object" && (function () {
 	        }, 10);
 	      }); // Setup the player
 
-	      var player = new Plyr(selector, {
-	        debug: true,
-	        title: 'View From A Blue Moon',
-	        iconUrl: 'dist/demo.svg',
-	        keyboard: {
-	          global: true
-	        },
-	        tooltips: {
-	          controls: true
-	        },
-	        captions: {
-	          active: true
-	        },
-	        keys: {
-	          google: 'AIzaSyDrNwtN3nLH_8rjCmu5Wq3ZCm4MNAVdc0c'
-	        },
-	        ads: {
-	          enabled: env.prod || env.dev,
-	          publisherId: '918848828995742'
-	        },
-	        previewThumbnails: {
-	          enabled: true,
-	          src: ['https://cdn.plyr.io/static/demo/thumbs/100p.vtt', 'https://cdn.plyr.io/static/demo/thumbs/240p.vtt']
-	        }
+	      var players = Array.from(document.querySelectorAll('.hgk-dima-player')).map(function (p) {
+	        return new Plyr(p, {
+	          debug: true,
+	          title: 'View From A Blue Moon',
+	          iconUrl: 'dist/demo.svg',
+	          keyboard: {
+	            global: true
+	          },
+	          tooltips: {
+	            controls: true
+	          },
+	          captions: {
+	            active: true
+	          },
+	          keys: {
+	            google: 'AIzaSyDrNwtN3nLH_8rjCmu5Wq3ZCm4MNAVdc0c'
+	          },
+	          ads: {
+	            enabled: env.prod || env.dev,
+	            publisherId: '918848828995742'
+	          },
+	          previewThumbnails: {
+	            enabled: true,
+	            src: ['https://cdn.plyr.io/static/demo/thumbs/100p.vtt', 'https://cdn.plyr.io/static/demo/thumbs/240p.vtt']
+	          }
+	        });
 	      }); // Expose for tinkering in the console
 
-	      window.player = player; // Setup type toggle
+	      window.player = players; // Setup type toggle
 
 	      var buttons = document.querySelectorAll('[data-source]');
 	      var types = {
@@ -13177,13 +13228,13 @@ typeof navigator === "object" && (function () {
 	          case types.audio:
 	            player.source = {
 	              type: 'audio',
-	              title: 'Kishi Bashi &ndash; &ldquo;It All Began With A Burst&rdquo;',
+	              title: 'Demo from Media HGK Server',
 	              sources: [{
-	                src: 'https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.mp3',
-	                type: 'audio/mp3'
+	                src: 'https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav$$web$$1/master',
+	                type: 'audio/mp4'
 	              }, {
-	                src: 'https://cdn.plyr.io/static/demo/Kishi_Bashi_-_It_All_Began_With_a_Burst.ogg',
-	                type: 'audio/ogg'
+	                src: 'https://ba14ns21403-sec1.fhnw.ch/mediasrv/DigitaleSee/Birgit_Kempker_Texte_im_Dunstkreis_1-12.wav/master',
+	                type: 'audio/wav'
 	              }]
 	            };
 	            break;

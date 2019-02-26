@@ -9,3 +9,6 @@ yarn-error.log
 package-lock.json
 *.webm
 .idea/
+
+demo/index.htmlgs
+

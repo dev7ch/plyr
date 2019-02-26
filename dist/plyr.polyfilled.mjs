@@ -724,6 +724,38 @@ _fixReWks('split', 2, function (defined, SPLIT, $split, maybeCallNative) {
   ];
 });
 
+// 7.1.13 ToObject(argument)
+
+var _toObject = function (it) {
+  return Object(_defined(it));
+};
+
+var _strictMethod = function (method, arg) {
+  return !!method && _fails(function () {
+    // eslint-disable-next-line no-useless-call
+    arg ? method.call(null, function () { /* empty */ }, 1) : method.call(null);
+  });
+};
+
+var $sort = [].sort;
+var test = [1, 2, 3];
+
+_export(_export.P + _export.F * (_fails(function () {
+  // IE8-
+  test.sort(undefined);
+}) || !_fails(function () {
+  // V8 bug
+  test.sort(null);
+  // Old WebKit
+}) || !_strictMethod($sort)), 'Array', {
+  // 22.1.3.25 Array.prototype.sort(comparefn)
+  sort: function sort(comparefn) {
+    return comparefn === undefined
+      ? $sort.call(_toObject(this))
+      : $sort.call(_toObject(this), _aFunction(comparefn));
+  }
+});
+
 // 22.1.3.31 Array.prototype[@@unscopables]
 var UNSCOPABLES = _wks('unscopables');
 var ArrayProto = Array.prototype;
@@ -889,12 +921,6 @@ _hide(IteratorPrototype, _wks('iterator'), function () { return this; });
 var _iterCreate = function (Constructor, NAME, next) {
   Constructor.prototype = _objectCreate(IteratorPrototype, { next: _propertyDesc(1, next) });
   _setToStringTag(Constructor, NAME + ' Iterator');
-};
-
-// 7.1.13 ToObject(argument)
-
-var _toObject = function (it) {
-  return Object(_defined(it));
 };
 
 // 19.1.2.9 / 15.2.3.2 Object.getPrototypeOf(O)
